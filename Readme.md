@@ -48,13 +48,10 @@ Definitions:
 
 
 
-Straight up JSON has enough fidelity to deal with this, some of these lookups will flatly refuse to scale though.
+The concept of an Encounter doesn't model long-term online conversations well. Maybe many satisfying Encounters of low quality can indicate attention paid to a brief back and forth. It would require interaction-quality to accumulate.  which would suggest that negative quality values can be used to indicate smalltalk
 
-Like non-rel databases, JSON would allow sharding on a multi-disk multicore.
+Many of the data types used have way more fidelity than they need, this is deliberate. Human interaction is fuzzy, and measurement is hard. The majority of the data that goes into this database is intended to be qualitative only. Uncertainty bounds and un-modelled data makes splitting hairs meaningless. This isn't supposed to accurately archive or direct a perfect personal narrative, it's meant to prompt a smoother story.
 
-The concept of an Encounter doesn't model long-term online conversations well. Maybe many Encounters of low quality as a brief back and forth. Would require quality to accumulate, and negative Quality with high CutShort would indicate smalltalk
+Using sqlAlchemy so that the result is somewhat agnostic to the underlying database.  I fully expect people to search the database content with tools written in Perl so adding flexibility with strings is a major goal.
 
-Build a bunch of layers so that the DB architecture can be chosen later
-Start with SQLlite, maybe migrate to MariaDB
-Build an interface (Maybe like TaskWarrior)
 
