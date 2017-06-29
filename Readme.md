@@ -10,7 +10,7 @@ An elemental Thing for managing encounters with people, Because I'm terrible at 
 
 #### Would Be Nice:
 * a reference to what generated the encounter so that automatic sources can be managed.
-*A transactional structure that allows multiple (offline) clients to add to the database to facilitate multiple autonomous agents (replaying other agent's transactions into the local database to synchronise)
+* A transactional structure that allows multiple (offline) clients to add to the database to facilitate multiple autonomous agents (replaying other agent's transactions into the local database to synchronise)
 
 
 #### Definitions:
