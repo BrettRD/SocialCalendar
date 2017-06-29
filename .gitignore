@@ -1,2 +1,4 @@
 *.pyc
 *.db
+*.ob
+__pychache__*
