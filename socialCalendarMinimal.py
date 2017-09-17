@@ -61,10 +61,15 @@ class Person(Base):
 class Encounter(Base):
     __tablename__ = 'encounter_table'
     id = Column(Integer, primary_key=True)
+
     #Who was it with?    
     personId = Column(Integer, ForeignKey('person_table.id'), nullable=False)
     person = relationship("Person", back_populates="encounters")
-    #encode groups as concurrent encounters.
+    #encode encounters with groups as multiple concurrent encounters.
+
+    #how was the entry added to the database?    
+    updaterId = Column(Integer, ForeignKey('updaters_table.id'), nullable=False) # not nullable to force traceability
+    updater = relationship("Updater", back_populates="entries")
 
     brief = Column(String(150)) #a brief description for display
     notes = Column(Text) #Full notes like venues, ambiance, musings, topics of conversation, tags etc.
@@ -106,7 +111,38 @@ Person.dates = relationship("ImportantDates", order_by=ImportantDates.startDate,
 
 
 
+# updating the database through various plugins will have issues.
+# adding fields to the person table would require database migration every time a new plugin is connected.
+# Instead, keep a list of updaters, and a collection of handles allowing a given updater to deal with a subset of people.
+# 
 
+class Updater(Base)
+    __tablename__ = "updaters_table"
+    id = Column(Integer, primary_key = True)
+    name = Column(String(150))  # a catchy name for your updater
+    description = Column(Text)  # a quick human-readable description of how this updater gathers data
+
+
+class Addresses(Base):
+    __tablename__ = "addresses_table"
+    id = Column(Integer, primary_key = True)
+
+    #who are we talking about?
+    personId = Column(Integer, ForeignKey('person_table.id'), nullable=False)
+    person = relationship("Person", back_populates="addresses")
+
+    # which updater uses this handle?
+    updaterId = Column(Integer, ForeignKey('updaters_table.id'), nullable=False)
+    updater = relationship("Updater", back_populates="addresses")
+
+    # any information your updater requires to unambiguously identify a person in the appropriate environment.
+    handle = Column(Text)
+
+    def __repr__(self):
+        return "<Address(For ='%s', on via updater ='%s', handle='%s')>" % (self.person.name, self.updater.name, self.handle)
+
+Person.addresses = relationship("Addresses", order_by=Addresses.updater.name, back_populates="person")
+Updater.addresses = relationship("Addresses", order_by=Addresses.person.urgency, back_populates="person")
 
 
 

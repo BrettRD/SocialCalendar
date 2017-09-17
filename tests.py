@@ -1,5 +1,5 @@
 from socialCalendarMinimal import *
-engine = create_engine('sqlite:///:memory:', echo=True)
+engine = create_engine('sqlite+pysqlcipher:///:memory:', echo=True)
 Base.metadata.create_all(engine)
 frank = Person(name='Frank')
 from sqlalchemy.orm import sessionmaker
