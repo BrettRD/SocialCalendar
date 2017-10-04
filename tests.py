@@ -10,7 +10,7 @@ frank = Person(name='Frank')
 session.add(frank)
 session.commit()
 
-terminalMenu = Updater(name="terminal terminalMenu")
+terminalMenu = Updater(name="terminalMenu")
 session.add(terminalMenu)
 session.commit()
 
