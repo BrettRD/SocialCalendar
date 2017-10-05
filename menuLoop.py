@@ -5,6 +5,9 @@
 # http://charlesleifer.com/blog/dear-diary-an-encrypted-command-line-diary-with-python/
 # 
 
+from socialCalendarMinimal import *
+from sqlalchemy.orm import sessionmaker
+
 def menu_loop():
     choice = None
     while choice != 'q':
@@ -17,13 +20,13 @@ def menu_loop():
 def search_person(query=None):
     while True:
         name = raw_input(' enter a name ').lower().strip()
-        if not query
+        if query == None:
             query = session.query(Person)
         results = query.filter(Person.name.like(name+'%')).all()
         if len(results) == 0:
             print("no results")
             if raw_input('try again? [Yn] ') == 'n':
-                return []
+                return None
         elif len(results) == 1:
             print("found only one: ")
             print str(results[0])
@@ -34,9 +37,9 @@ def search_person(query=None):
             for i in range(0, len(results)):
                 print(str(i) + ": " + results[i].name)
             while True:
-                choice = raw_input(' try again: a, choose: 0-' + str(len(results)) + ", abort: q, ").strip()
+                choice = raw_input(' try again: a, choose: 0-' + str(len(results)-1) + ", abort: q, ").strip()
                 if choice == 'q':
-                    return []
+                    return None
                 elif choice.isdigit():
                     if int(choice) > len(results):
                         print("out of range")
@@ -48,6 +51,7 @@ def search_person(query=None):
 
 
 def add_person():
+    """Add a person"""
     if raw_input('search first? [Yn] ') != 'n':
         associate_person()
     else:
@@ -67,10 +71,10 @@ def associate_person():
     #limit selections to people with no addresses associating them with this updater
     query = session.query(Person).filter(~Person.addresses.any(Addresses.updater == terminalMenu))
     person = search_person(query)
-    if person:
-        print str(newPerson)
+    if person != None:
+        print str(person)
         if raw_input('Associate this person with this updater? [Yn] ') != 'n':
-            newAddress = Addresses(person=newPerson, updater=terminalMenu)
+            newAddress = Addresses(person=person, updater=terminalMenu)
             session.add(newAddress)
             session.commit()
             print('Saved successfully.')
@@ -79,36 +83,50 @@ def associate_person():
 
 
 def add_Encounter():
+    """Add an encounter"""
     print('Who with?')
     #limit selections to people associated with this updater
     query = session.query(Person).filter(Person.addresses.any(Addresses.updater == terminalMenu))
     person = search_person(query)
-    brief = raw_input(' what happened? ')
-    newEncounter = Encounter(person=person, updater=terminalMenu, startTime=datetime.now(), brief=brief)
-    print str(newEncounter)
-    if raw_input('Save entry? [Yn] ') != 'n':
-        session.add(newEncounter)
-        #then add a handle for our updater to find this person by
-        newAddress = Addresses(person=newPerson, updater=terminalMenu)
+    if person != None:
+        brief = raw_input(' what happened? ')
+        newEncounter = Encounter(person=person, updater=terminalMenu, startTime=datetime.now(), brief=brief)
+        print str(newEncounter)
+        if raw_input('Save entry? [Yn] ') != 'n':
+            session.add(newEncounter)
+            session.commit()
+            print('Saved successfully.')
+
+
+
+terminalMenu = None
+
+menu = {
+    'p' : add_person,
+    'e' : add_Encounter
+}
+
+if __name__ == '__main__':
+
+    # hook to a database
+    engine = create_engine('sqlite:///:memory:', echo=True)
+    Base.metadata.create_all(engine)
+    Base.metadata.bind = engine
+    DBSession = sessionmaker(bind=engine)
+    session = DBSession()
+
+
+    # grab this updater
+    terminalMenu = session.query(Updater).filter(Updater.name == "terminalMenu").all()
+    if len(terminalMenu) == 0:
+        print "this seems to be the first run of this updater. Registering"
+        terminalMenu = Updater(name="terminalMenu")
+        session.add(terminalMenu)
         session.commit()
-        print('Saved successfully.')
+    elif len(terminalMenu) > 1:
+        print "this updater exists in duplicate, that needs fixing."
+        exit()
+    else:
+        terminalMenu = terminalMenu[0]
 
-
-
-# this updater
-try:
-    terminalMenu = session.query(Updater).filter(Updater.name == "terminalMenu").one()
-except sqlalchemy.orm.exc.NoResultFound:
-    print "this seems to be the first run of this updater. Registering"
-    terminalMenu = Updater(name="terminalMenu")
-    session.add(terminalMenu)
-    session.commit()
-except sqlalchemy.orm.exc.MultipleResultsFound:
-    print "this updater exists in duplicate, that needs fixing."
-
-
-menu = ([
-    ('p', add_person),
-    ('e', add_Encounter),
-    ('s', search_entries),
-])
+    menu_loop()
